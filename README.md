@@ -2,19 +2,37 @@
 
 **AlphaZero appliqué à l'Awalé**, écrit intégralement à la main en Python — réseau, MCTS et self-play, sans aucune partie humaine.
 
-> Ce n'est pas un projet « faire une IA qui joue ».
-> C'est un projet de **mesure** : produire un chiffre défendable.
+L'agent complet est construit : réseau politique/valeur, MCTS guidé, self-play,
+courbes d'apprentissage. Ce qui distingue ce projet n'est pas **ce qu'on
+construit**, mais **comment on le juge à la fin**.
 
 ```
 ❌  « mon agent bat le joueur aléatoire »
+    → ne dit rien : le joueur aléatoire est mauvais
 
 ✅  « mon agent joue le coup optimal dans 94,3 % des positions de finale,
      mesuré sur 10 000 positions tirées au hasard dans l'oracle »
+    → un chiffre défendable, comparé à la vérité
 ```
 
 L'Awalé est **fortement résolu** (Romein & Bal, 2002). On peut donc calculer une
 vérité terrain et évaluer l'agent contre elle, au lieu de le comparer à des
 adversaires arbitraires.
+
+> **Réimplémentation indépendante**, écrite à partir des articles publiés par
+> DeepMind. AlphaZero n'est pas open source : aucun code tiers n'est repris ici,
+> et ce projet n'a aucun lien avec DeepMind.
+
+### Pourquoi l'Awalé
+
+Information parfaite, déterministe, **6 coups légaux au maximum** — contre 362 au
+go et 4 672 aux échecs. Les parties sont courtes et le jeu tient sur un anneau de
+12 entiers. Surtout : il est **résolu**, ce qui rend l'évaluation contre la vérité
+possible. Un même algorithme, un terrain assez petit pour tourner sur un portable.
+
+Une difficulté propre au jeu, en revanche : contrairement au go et ses 8 symétries,
+l'Awalé n'en a quasiment aucune. Il faudra donc **plus de parties de self-play**
+pour un même volume d'apprentissage.
 
 ---
 
@@ -118,8 +136,14 @@ python3 src/jeu.py
 
 ## Références
 
-- Silver et al., *Mastering the game of Go without human knowledge*, Nature 2017
-- Silver et al., *A general reinforcement learning algorithm that masters chess, shogi and Go through self-play*, Science 2018
-- Romein & Bal, *Awari is Solved*, Vrije Universiteit Amsterdam, 2002 — bases de données aujourd'hui hors ligne, d'où l'oracle maison
-- [Oware — Wikipedia](https://en.wikipedia.org/wiki/Oware), variation *abapa*
-# alphaawale
+**L'algorithme — DeepMind**
+Les deux articles fondateurs. David Silver dirige les projets AlphaGo et AlphaZero
+chez DeepMind ; *et al.* signifie « et les autres auteurs ».
+
+- Silver et al., *[Mastering the game of Go without human knowledge](https://www.nature.com/articles/nature24270)*, **Nature**, 2017 — AlphaGo Zero : le premier agent entraîné sans aucune partie humaine.
+- Silver et al., *[A general reinforcement learning algorithm that masters chess, shogi and Go through self-play](https://www.science.org/doi/10.1126/science.aar6404)*, **Science**, 2018 — AlphaZero : le même algorithme généralisé à trois jeux. C'est celui qu'on reproduit ici.
+
+**Le jeu — autres équipes**
+
+- Romein & Bal, *[Awari is Solved](https://research.vu.nl/en/publications/awari-is-solved)*, Vrije Universiteit Amsterdam, **2002** — la résolution complète de l'Awalé, sur un supercalculateur. Leurs bases de données sont aujourd'hui hors ligne : d'où l'oracle maison de l'étape 4.
+- [Oware — Wikipedia](https://en.wikipedia.org/wiki/Oware) — les règles, variation *abapa*.
