@@ -1,0 +1,74 @@
+# === macOS / disque externe ===
+# Ton disque (exFAT) génère ces fichiers de métadonnées cachés
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environnements virtuels
+.venv/
+venv/
+env/
+ENV/
+
+# === Jupyter ===
+.ipynb_checkpoints/
+
+# === PyTorch / entraînement / résultats générés ===
+# Ces fichiers sont volumineux ou reproductibles : à régénérer, pas à versionner
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.npz
+*.pkl
+*.h5
+donnees/*
+!donnees/.gitkeep
+runs/
+logs/
+wandb/
+checkpoints/
+
+# === Secrets / configuration locale ===
+.env
+.env.*
+*.key
+
+# === Éditeurs / IDE ===
+.vscode/
+.idea/
+*.swp
+
+# === Cursor (état d'agent local, pas à publier) ===
+.cursor/
+
+# === Claude Code (réglages locaux à la machine) ===
+.claude/settings.local.json
+
+# === Sorties de tournois / journaux ===
+*.log
+*.csv
+!tests/**/*.csv
+
+# === Notes de travail privées (contrat pédagogique, pas pour le dépôt public) ===
+CLAUDE.md
