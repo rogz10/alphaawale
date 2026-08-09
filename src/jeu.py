@@ -6,7 +6,7 @@ def etat_initial():
     }
 
 
-def afficher(etat):
+def afficher(etat):# fonction qui affiche l'etat du jeu
     
     rangee_du_bas=etat["trous"][:6]
     rangee_du_haut=etat["trous"][6:][::-1]
@@ -20,7 +20,7 @@ def afficher(etat):
     print(f"ligne du bas  : {ligne_bas}")
     print(f"Score - J0: {etat['scores'][0]}, Score - J1:{etat['scores'][1]}")
 
-def coups_possibles(etat):
+def coups_possibles(etat):# fonction qui renvoie la liste des trous possibles a semer, en fonction du trait
     if etat["trait"]==0:
         ma_range=etat["trous"][:6]
         decalage=0
@@ -33,14 +33,14 @@ def coups_possibles(etat):
             resultat.append(i+decalage)
 
     return resultat
-def semer(trous, depart):
+def semer(trous, depart): # fonction qui seme les graines dans les trous, en fonction de la position de depart
     #liste_dernier=[]
     new_holes=trous.copy()
     seeds=new_holes[depart] # nombre de graines contenues dans le trous de depart
     new_holes[depart]=0 # remise a 0 du trou de depart
     position=depart
     for seed in range(seeds):
-        position=(position +1) %12
+        position=(position +1) %12 # %12 permet de revenir au debut de la liste si on depasse la derniere case 
         if position== depart:
             #position+=1
             position=(position+1)%12
@@ -51,17 +51,19 @@ def semer(trous, depart):
     return new_holes, position
     #print(f"copie des trous:{new_holes}")
 #copi=semer({"trous": [1,2,3,4,5,6,7,8,9,10,11,12], "scores": [0,0], "trait": 0})
-def est_chez_adversaire(position,trait):
+def est_chez_adversaire(position,trait): # fonction qui verifie si la position de la derniere graine semee est chez l'adversaire
     return position // 6!=trait
 
-   #if position >5 and trait== 0:
-        #return True
-    #elif position <6 and trait==1:
-        #return True
-    #elif position>5 and trait==1:
-        #return False
-    #elif position <6 and trait==0:
-        #return False
+def capturer(trous,derniere,trait): # fonction qui capture les graines de l'adversaire, en fonction de la position de la derniere graine semee
+    new=trous.copy()
+    total=0
+    position=derniere
+    while est_chez_adversaire(position,trait) and (new[position]==2 or new[position]==3):
+        total+=new[position]
+        new[position]=0
+        position=(position-1)%12 # %12 permet de revenir au debut de la liste si on depasse la derniere case (il se declenche que si franchit la couture entre le trou 0 et le trou 11)
+    return new,total
+
 
 if __name__=="__main__":
     etat=etat_initial()
@@ -92,9 +94,9 @@ if __name__=="__main__":
     print(semer([12,1,1,1,1,1, 1,1,1,1,1,1], 0))   
     print(semer([13,1,1,1,1,1, 1,1,1,1,1,1], 0))    
     print(semer([1,1,1,1,1,1, 1,1,1,1,1,12], 11))   
-
+    print("="*50)
     trous,derniere =semer([4,4,4,4,4,4, 4,4,4,4,4,4], 2)
-    print(sum(trous))
+    #print(sum(trous))
     print(derniere)
     trous, derniere = semer([0,0,0,0,0,0, 0,0,0,0,0,3], 11)
     print(derniere)
@@ -104,3 +106,17 @@ if __name__=="__main__":
     print(est_chez_adversaire(3, 0))
     print(est_chez_adversaire(7, 1))
     print(est_chez_adversaire(3, 1))
+    print("capturer")
+    t, n = capturer([0,0,0,0,0,0, 2,3,4,0,0,0], 8, 0)
+    print(t, n)
+    t, n = capturer([0,0,0,0,0,0, 2,3,2,0,0,4], 8, 0)
+    print(t, n) 
+    t, n = capturer([0,0,0,0,0,0, 0,0,4,0,0,0], 8, 0)
+    print(t, n)
+    t, n = capturer([0,0,2,0,0,0, 0,0,0,0,0,0], 2, 0)
+    print(t, n)
+    t, n = capturer([0,0,0,0,0,0, 2,5,2,0,0,0], 8, 0)
+    print(t, n)
+    t, n = capturer([0,0,0,3,0,0, 0,0,0,0,0,0], 3, 0)
+    print(t,n)    # [0,0,0,3,0,0, 0,0,0,0,0,0]  et  0
+
