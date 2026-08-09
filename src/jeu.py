@@ -64,6 +64,52 @@ def capturer(trous,derniere,trait): # fonction qui capture les graines de l'adve
         position=(position-1)%12 # %12 permet de revenir au debut de la liste si on depasse la derniere case (il se declenche que si franchit la couture entre le trou 0 et le trou 11)
     return new,total
 
+def graines_adversaire(trous,trait):
+    joueur0=trous[:6]
+    joueur1=trous[6:]
+    nb_graine_adversaire=0
+    if trait==0:
+        nb_graine_adversaire=sum(joueur1)
+
+    else:
+        nb_graine_adversaire=sum(joueur0)
+
+    return nb_graine_adversaire
+def coups_legaux(etat):
+    possibles=coups_possibles(etat)
+    if graines_adversaire(etat["trous"],etat["trait"])>0:
+        return possibles
+    else:
+        legaux=[]
+        for coup in(possibles):
+            apres,_=semer(etat["trous"],coup)
+            if graines_adversaire(apres,etat["trait"])>0:
+                legaux.append(coup)
+    return legaux
+def jouer(etat,coup):
+    trait=etat["trait"]
+    apres_semis,derniere=semer(etat["trous"],coup)
+    apres_capture,gagnees=capturer(apres_semis,derniere,trait)
+    scores=etat["scores"].copy()
+    scores[trait]+=gagnees
+    return{"trous":apres_capture,"scores":scores,"trait":1-trait}
+def est_termine(etat):
+    if etat["scores"][0] >=25 or etat["scores"][1] >=25:
+        return True
+    if etat["scores"][0]==24 and etat["scores"][1]==24:
+        return True
+    if len(coups_legaux(etat))==0:
+        return True
+    return False
+def terminer(etat):
+    scores=etat["scores"].copy()
+    scores[0]+=sum(etat["trous"][:6])
+    scores[1]+=sum(etat["trous"][6:])
+    return {"trous": [0]*12, "scores": scores, "trait": etat["trait"]}
+
+
+
+
 
 if __name__=="__main__":
     etat=etat_initial()
@@ -118,5 +164,60 @@ if __name__=="__main__":
     t, n = capturer([0,0,0,0,0,0, 2,5,2,0,0,0], 8, 0)
     print(t, n)
     t, n = capturer([0,0,0,3,0,0, 0,0,0,0,0,0], 3, 0)
-    print(t,n)    # [0,0,0,3,0,0, 0,0,0,0,0,0]  et  0
+    print(t,n)   
+    print("graine adverse")
+    print(graines_adversaire([1,1,1,1,1,1, 0,0,0,0,0,0], 0))  
+    print(graines_adversaire([1,1,1,1,1,1, 0,0,0,0,0,0], 1))  
+    print(graines_adversaire([0,0,0,0,0,0, 2,3,0,0,0,1], 0))   
+    print(graines_adversaire([0,0,0,0,0,0, 2,3,0,0,0,1], 1))   
+    print("coup legaux")
 
+    e = {"trous": [1,1,1,1,1,1, 1,1,1,1,1,1], "scores":[0,0], "trait":0}
+    print(coups_legaux(e))  
+
+
+    e = {"trous": [2,0,0,0,0,1, 0,0,0,0,0,0], "scores":[0,0], "trait":0}
+    print(coups_legaux(e))    
+
+    e = {"trous": [2,0,0,0,0,0, 0,0,0,0,0,0], "scores":[0,0], "trait":0}
+    print(coups_legaux(e))    
+    e = {"trous": [0,0,0,0,0,0, 2,0,0,0,0,1], "scores":[0,0], "trait":1}
+    print(coups_legaux(e))    
+    print("jouer")
+
+    e = etat_initial()
+    n = jouer(e, 2)
+    print(n)
+    
+    e = {"trous": [0,0,0,0,0,3, 1,2,1,0,0,4], "scores":[0,0], "trait":0}
+    avant = sum(e["trous"]) + sum(e["scores"])
+
+    n = jouer(e, 5)
+
+    assert sum(n["trous"]) + sum(n["scores"]) == avant, "invariant casse"
+    print(n)
+
+    e = {"trous": [0,0,0,0,0,3, 1,2,1,0,0,4], "scores":[0,0], "trait":0}
+    jouer(e, 5)
+    print(e["trous"], e["scores"])
+
+
+
+    e = {"trous": [1,1,1,1,1,1, 0,0,0,0,0,3], "scores":[0,0], "trait":1}
+    n = jouer(e, 11)
+    print(n)
+   
+    print("est terminer")
+    print(est_termine(etat_initial()))                            
+
+    e = {"trous": [1,1,1,1,1,1, 1,1,1,1,1,1], "scores":[25,10], "trait":0}
+    print(est_termine(e))   
+
+    e = {"trous": [0,0,0,0,0,0, 0,0,0,0,0,0], "scores":[24,24], "trait":0}
+    print(est_termine(e)) 
+
+    e = {"trous": [2,0,0,0,0,0, 0,0,0,0,0,0], "scores":[0,0], "trait":0}
+    print(est_termine(e))   
+
+    e = {"trous": [3,2,1,0,0,4, 2,2,0,1,3,0], "scores":[10,12], "trait":0}
+    print(est_termine(e))    

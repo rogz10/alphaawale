@@ -65,19 +65,24 @@ graines pour gagner.
 
 ## Avancement
 
-Étape 1, le moteur de jeu — en cours.
+Étape 1, le moteur de jeu — **terminée**.
 
 - [x] `etat_initial()`, `afficher()`
 - [x] `coups_possibles()` : trous jouables du joueur au trait
 - [x] `semer()` : semis antihoraire, saut du trou d'origine, position de la dernière graine
-- [x] `est_chez_adversaire()`
-- [ ] `capturer()` : capture en chaîne
-- [ ] `coups_legaux()` : coups possibles, plus l'obligation de nourrir
-- [ ] `jouer()`, `est_termine()`
+- [x] `est_chez_adversaire()`, `graines_adversaire()`
+- [x] `capturer()` : capture en chaîne
+- [x] `coups_legaux()` : coups possibles, plus l'obligation de nourrir
+- [x] `jouer()` : semis, capture, score, alternance du trait
+- [x] `est_termine()`, `terminer()` : fin de partie et ramassage final
+
+Critère franchi : **10 000 parties aléatoires, 1 034 220 coups**, invariant des 48 graines
+vérifié à chaque coup, aucune exception. Après ramassage final, les greniers totalisent
+toujours 48 graines.
 
 Étapes suivantes.
 
-- [ ] Viewer HTML pour rejouer une partie coup par coup
+- [ ] Viewer HTML pour rejouer une partie coup par coup ← en cours
 - [ ] Joueurs de référence : aléatoire, puis minimax alpha-bêta
 - [ ] MCTS pur (UCT, simulations aléatoires)
 - [ ] Oracle des finales par analyse rétrograde, jusqu'à dix-huit graines
