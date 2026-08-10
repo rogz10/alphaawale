@@ -1,3 +1,5 @@
+import random
+import json
 def etat_initial():
     return {
         "trous":[4]*12,
@@ -221,3 +223,22 @@ if __name__=="__main__":
 
     e = {"trous": [3,2,1,0,0,4, 2,2,0,1,3,0], "scores":[10,12], "trait":0}
     print(est_termine(e))    
+    print("=" * 50)
+    print("une partie aleatoire")
+    etat = etat_initial() # pcommncer par plateau plein
+    positions=[etat]# position initiale
+    while not est_termine(etat): # tant que c'est pas fini
+        legaux=coups_legaux(etat) # quels sont les coups autorisé
+        coup=random.choice(legaux) # choisir un coup aleatoire parmis les coups autorisé
+        etat=jouer(etat, coup)# le jouer et obtenir le nouvel etat 
+        positions.append(etat)
+    etat=terminer(etat)# chacun ramasse son camp
+    positions.append(etat)
+    print(len(positions),"positions gardées")
+    afficher(positions[0])      # le depart
+    afficher(positions[1])      # apres 1 coup
+    afficher(positions[2])
+    afficher(etat) # resulat 
+    with open("donnees/partie.json","w") as f:
+        json.dump(positions,f)
+
