@@ -1,5 +1,7 @@
-import random
 import json
+import random
+
+
 def etat_initial():
     return {
         "trous":[4]*12,
@@ -9,7 +11,7 @@ def etat_initial():
 
 
 def afficher(etat):# fonction qui affiche l'etat du jeu
-    
+
     rangee_du_bas=etat["trous"][:6]
     rangee_du_haut=etat["trous"][6:][::-1]
     ligne_bas= ""
@@ -41,8 +43,8 @@ def semer(trous, depart): # fonction qui seme les graines dans les trous, en fon
     seeds=new_holes[depart] # nombre de graines contenues dans le trous de depart
     new_holes[depart]=0 # remise a 0 du trou de depart
     position=depart
-    for seed in range(seeds):
-        position=(position +1) %12 # %12 permet de revenir au debut de la liste si on depasse la derniere case 
+    for _ in range(seeds):
+        position=(position +1) %12 # %12 permet de revenir au debut de la liste si on depasse la derniere case
         if position== depart:
             #position+=1
             position=(position+1)%12
@@ -81,12 +83,11 @@ def coups_legaux(etat):
     possibles=coups_possibles(etat)
     if graines_adversaire(etat["trous"],etat["trait"])>0:
         return possibles
-    else:
-        legaux=[]
-        for coup in(possibles):
-            apres,_=semer(etat["trous"],coup)
-            if graines_adversaire(apres,etat["trait"])>0:
-                legaux.append(coup)
+    legaux=[]
+    for coup in(possibles):
+        apres,_=semer(etat["trous"],coup)
+        if graines_adversaire(apres,etat["trait"])>0:
+            legaux.append(coup)
     return legaux
 def jouer(etat,coup):
     trait=etat["trait"]
@@ -109,10 +110,6 @@ def terminer(etat):
     scores[1]+=sum(etat["trous"][6:])
     return {"trous": [0]*12, "scores": scores, "trait": etat["trait"]}
 
-
-
-
-
 if __name__=="__main__":
     etat=etat_initial()
     print(etat)
@@ -122,7 +119,7 @@ if __name__=="__main__":
     afficher(etat_test)
     test_trait_0 = {"trous": [0,3,0,5,1,0, 2,2,2,2,2,2], "scores": [0,0], "trait": 0}
     test_trait_1 = {"trous": [0,3,0,5,1,0, 2,2,2,2,2,2], "scores": [0,0], "trait": 1}
-    print(coups_possibles(test_trait_0))    
+    print(coups_possibles(test_trait_0))
     print(coups_possibles(test_trait_1))
     print("*"*50)
     print("semer:\n")
@@ -137,11 +134,11 @@ if __name__=="__main__":
     print(semer(gros, 0))
     print(sum(pile))
     print(sum(gros))
-    print(semer([4,4,4,4,4,4, 4,4,4,4,4,4], 2)) 
-    print(semer([0,0,0,0,0,0, 0,0,0,0,0,3], 11))   
-    print(semer([12,1,1,1,1,1, 1,1,1,1,1,1], 0))   
-    print(semer([13,1,1,1,1,1, 1,1,1,1,1,1], 0))    
-    print(semer([1,1,1,1,1,1, 1,1,1,1,1,12], 11))   
+    print(semer([4,4,4,4,4,4, 4,4,4,4,4,4], 2))
+    print(semer([0,0,0,0,0,0, 0,0,0,0,0,3], 11))
+    print(semer([12,1,1,1,1,1, 1,1,1,1,1,1], 0))
+    print(semer([13,1,1,1,1,1, 1,1,1,1,1,1], 0))
+    print(semer([1,1,1,1,1,1, 1,1,1,1,1,12], 11))
     print("="*50)
     trous,derniere =semer([4,4,4,4,4,4, 4,4,4,4,4,4], 2)
     #print(sum(trous))
@@ -158,7 +155,7 @@ if __name__=="__main__":
     t, n = capturer([0,0,0,0,0,0, 2,3,4,0,0,0], 8, 0)
     print(t, n)
     t, n = capturer([0,0,0,0,0,0, 2,3,2,0,0,4], 8, 0)
-    print(t, n) 
+    print(t, n)
     t, n = capturer([0,0,0,0,0,0, 0,0,4,0,0,0], 8, 0)
     print(t, n)
     t, n = capturer([0,0,2,0,0,0, 0,0,0,0,0,0], 2, 0)
@@ -166,31 +163,30 @@ if __name__=="__main__":
     t, n = capturer([0,0,0,0,0,0, 2,5,2,0,0,0], 8, 0)
     print(t, n)
     t, n = capturer([0,0,0,3,0,0, 0,0,0,0,0,0], 3, 0)
-    print(t,n)   
+    print(t,n)
     print("graine adverse")
-    print(graines_adversaire([1,1,1,1,1,1, 0,0,0,0,0,0], 0))  
-    print(graines_adversaire([1,1,1,1,1,1, 0,0,0,0,0,0], 1))  
-    print(graines_adversaire([0,0,0,0,0,0, 2,3,0,0,0,1], 0))   
-    print(graines_adversaire([0,0,0,0,0,0, 2,3,0,0,0,1], 1))   
+    print(graines_adversaire([1,1,1,1,1,1, 0,0,0,0,0,0], 0))
+    print(graines_adversaire([1,1,1,1,1,1, 0,0,0,0,0,0], 1))
+    print(graines_adversaire([0,0,0,0,0,0, 2,3,0,0,0,1], 0))
+    print(graines_adversaire([0,0,0,0,0,0, 2,3,0,0,0,1], 1))
     print("coup legaux")
 
     e = {"trous": [1,1,1,1,1,1, 1,1,1,1,1,1], "scores":[0,0], "trait":0}
-    print(coups_legaux(e))  
-
+    print(coups_legaux(e))
 
     e = {"trous": [2,0,0,0,0,1, 0,0,0,0,0,0], "scores":[0,0], "trait":0}
-    print(coups_legaux(e))    
+    print(coups_legaux(e))
 
     e = {"trous": [2,0,0,0,0,0, 0,0,0,0,0,0], "scores":[0,0], "trait":0}
-    print(coups_legaux(e))    
+    print(coups_legaux(e))
     e = {"trous": [0,0,0,0,0,0, 2,0,0,0,0,1], "scores":[0,0], "trait":1}
-    print(coups_legaux(e))    
+    print(coups_legaux(e))
     print("jouer")
 
     e = etat_initial()
     n = jouer(e, 2)
     print(n)
-    
+
     e = {"trous": [0,0,0,0,0,3, 1,2,1,0,0,4], "scores":[0,0], "trait":0}
     avant = sum(e["trous"]) + sum(e["scores"])
 
@@ -203,26 +199,24 @@ if __name__=="__main__":
     jouer(e, 5)
     print(e["trous"], e["scores"])
 
-
-
     e = {"trous": [1,1,1,1,1,1, 0,0,0,0,0,3], "scores":[0,0], "trait":1}
     n = jouer(e, 11)
     print(n)
-   
+
     print("est terminer")
-    print(est_termine(etat_initial()))                            
+    print(est_termine(etat_initial()))
 
     e = {"trous": [1,1,1,1,1,1, 1,1,1,1,1,1], "scores":[25,10], "trait":0}
-    print(est_termine(e))   
+    print(est_termine(e))
 
     e = {"trous": [0,0,0,0,0,0, 0,0,0,0,0,0], "scores":[24,24], "trait":0}
-    print(est_termine(e)) 
+    print(est_termine(e))
 
     e = {"trous": [2,0,0,0,0,0, 0,0,0,0,0,0], "scores":[0,0], "trait":0}
-    print(est_termine(e))   
+    print(est_termine(e))
 
     e = {"trous": [3,2,1,0,0,4, 2,2,0,1,3,0], "scores":[10,12], "trait":0}
-    print(est_termine(e))    
+    print(est_termine(e))
     print("=" * 50)
     print("une partie aleatoire")
     etat = etat_initial() # pcommncer par plateau plein
@@ -230,7 +224,7 @@ if __name__=="__main__":
     while not est_termine(etat): # tant que c'est pas fini
         legaux=coups_legaux(etat) # quels sont les coups autorisé
         coup=random.choice(legaux) # choisir un coup aleatoire parmis les coups autorisé
-        etat=jouer(etat, coup)# le jouer et obtenir le nouvel etat 
+        etat=jouer(etat, coup)# le jouer et obtenir le nouvel etat
         positions.append(etat)
     etat=terminer(etat)# chacun ramasse son camp
     positions.append(etat)
@@ -238,7 +232,7 @@ if __name__=="__main__":
     afficher(positions[0])      # le depart
     afficher(positions[1])      # apres 1 coup
     afficher(positions[2])
-    afficher(etat) # resulat 
+    afficher(etat) # resulat
     with open("donnees/partie.json","w") as f:
         json.dump(positions,f)
 

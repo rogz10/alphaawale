@@ -1,166 +1,201 @@
 # AlphaAwalé
 
-Une implémentation d'AlphaZero pour le jeu de l'Awalé, écrite en Python.
-Projet d'apprentissage : réseau de neurones, recherche arborescente et self-play,
-sans aucune partie humaine.
+Un projet en Python pour appliquer les principes d’AlphaZero au jeu de l’Awalé.
 
-## L'idée
+![Le lecteur de parties rejouant une partie coup par coup](docs/demo.gif)
 
-L'Awalé a été résolu en 2002 par Romein et Bal. On peut donc recalculer, au moins
-sur les finales, le coup optimal dans une position donnée — et savoir précisément
-à quel point l'agent s'en approche.
+*Le lecteur de parties : relecture coup par coup, repérage des semis et des
+captures, contrôle des 48 graines.*
 
-C'est ce qui a motivé le choix du jeu. Plutôt que de juger l'agent sur des
-adversaires arbitraires, on le compare à une vérité calculée :
+L’idée est née après avoir regardé *The Thinking Game*. Les travaux de DeepMind
+sur AlphaGo et AlphaZero m’ont donné envie de comprendre comment un agent peut
+apprendre à jouer en affrontant ses propres versions. Avec AlphaAwalé, je cherche
+à explorer cette démarche en la reconstruisant étape par étape.
 
-```
-« bat le joueur aléatoire »
-     ne dit pas grand-chose, le joueur aléatoire est mauvais
+L’objectif est de faire apprendre un agent sans utiliser de parties humaines,
+puis de mesurer la qualité de ses décisions face à un oracle de finales : une
+base de positions dont le résultat optimal est calculé.
 
-« joue le coup optimal dans X % des positions de finale,
-  mesuré sur N positions tirées au hasard dans l'oracle »
-     se vérifie
-```
+**Le projet est en cours de développement.** Le moteur de jeu et le lecteur de
+parties sont terminés. La recherche arborescente, l’oracle et l’apprentissage
+constituent les prochaines étapes. Il s’agit d’un projet personnel
+d’apprentissage, sans affiliation avec DeepMind.
 
-Pour le reste, c'est un AlphaZero classique : un réseau qui produit une politique
-et une valeur, un MCTS guidé par ce réseau, et un entraînement par parties contre
-soi-même.
+## Pourquoi l’Awalé
 
-La méthode vient de DeepMind : c'est l'algorithme AlphaZero, décrit par Silver et
-al. dans Science en 2018, appliqué ici à l'Awalé. Leur code n'ayant jamais été
-publié, tout est réimplémenté à partir de l'article. Projet personnel, sans lien
-officiel avec DeepMind.
+L’Awalé offre un terrain d’expérimentation compact : deux rangées de six trous,
+quarante-huit graines et au maximum six coups à examiner à chaque tour. Le jeu
+est déterministe et les deux joueurs disposent de toute l’information sur le
+plateau.
 
-## Pourquoi l'Awalé
+Cette simplicité du matériel laisse place à des décisions intéressantes :
+préparer une capture, anticiper le semis suivant ou nourrir l’adversaire quand
+son camp est vide. Elle permet aussi de commencer par un moteur que l’on peut
+inspecter et tester sans GPU.
 
-Information parfaite, déterministe, six coups légaux au maximum — contre 362 au go
-et 4 672 aux échecs. Les parties sont courtes et une position tient dans douze
-entiers. L'ensemble tourne sur un ordinateur portable.
+Les travaux de Romein et Bal sur la résolution de l’Awari constituent une autre
+motivation. Le projet prévoit de construire son propre oracle sur un ensemble
+limité de finales, afin de disposer d’une référence exacte pour l’évaluation.
 
-Une difficulté propre au jeu, en revanche : là où le go offre huit symétries pour
-multiplier les données d'entraînement, l'Awalé n'en a quasiment aucune. Il faudra
-donc davantage de parties de self-play à volume d'apprentissage égal.
+## Ce que je veux mesurer
 
-## Les règles
+Les matchs contre des joueurs de référence permettront de suivre les progrès de
+l’agent. L’oracle apportera une mesure complémentaire : **la proportion de
+positions de finale dans lesquelles l’agent choisit un coup optimal**.
 
-Le jeu retenu est l'Oware abapa, dans la variante résolue par Romein et Bal.
+L’évaluation portera sur un échantillon de positions de l’oracle, avec un nombre
+de positions et un protocole documentés. Si plusieurs coups sont optimaux dans
+une position, chacun devra être accepté.
 
-Elle ne diffère de l'Awalé de club que sur un point : le grand chelem, c'est-à-dire
-un coup qui capturerait toutes les graines restantes de l'adversaire.
+Cette mesure restera limitée aux finales couvertes par l’oracle. Elle ne suffira
+pas, à elle seule, à décrire le niveau de l’agent sur une partie entière.
 
-| Variante | Grand chelem |
-|---|---|
-| Abapa de base | coup légal, mais la capture est annulée |
-| Compétition internationale | coup légal, aucune capture |
-| Résolue (retenue ici) | autorisé, la capture a lieu, la partie s'arrête |
+## Comment l’agent apprendra
 
-Ce choix ne peut pas être revu en cours de route : l'oracle des finales est calculé
-pour cette règle précise, et changer de variante invaliderait rétroactivement les
-parties de self-play, l'oracle et le taux d'optimalité.
+L’implémentation visée repose sur trois éléments qui se renforcent au fil de
+l’entraînement :
 
-Le reste suit les règles classiques : douze trous, quarante-huit graines, semis
-antihoraire, saut du trou d'origine au-delà de douze graines, capture à deux ou
-trois en chaîne dans le camp adverse, obligation de nourrir l'adversaire, vingt-cinq
-graines pour gagner.
+1. **Un réseau de neurones** évalue une position et propose une distribution sur
+   les coups possibles : les sorties « valeur » et « politique ».
+2. **Une recherche arborescente Monte-Carlo (MCTS)** explore les suites de coups,
+   guidée par les prédictions du réseau.
+3. **Des parties contre lui-même (self-play)** fournissent les exemples
+   d’entraînement : les choix de la recherche et les résultats des parties.
 
-## Avancement
+Le réseau sera ensuite mis à jour à partir de ces exemples, avant de générer de
+nouvelles parties. Aucune partie humaine ne sera utilisée pour l’entraînement.
+L’oracle servira de référence d’évaluation, séparément de cette boucle.
 
-Étape 1, le moteur de jeu — **terminée**.
+La méthode suit l’algorithme AlphaZero décrit par Silver et ses coauteurs dans
+*Science* en 2018. L’implémentation sera construite progressivement à partir de
+ces travaux.
 
-- [x] `etat_initial()`, `afficher()`
-- [x] `coups_possibles()` : trous jouables du joueur au trait
-- [x] `semer()` : semis antihoraire, saut du trou d'origine, position de la dernière graine
-- [x] `est_chez_adversaire()`, `graines_adversaire()`
-- [x] `capturer()` : capture en chaîne
-- [x] `coups_legaux()` : coups possibles, plus l'obligation de nourrir
-- [x] `jouer()` : semis, capture, score, alternance du trait
-- [x] `est_termine()`, `terminer()` : fin de partie et ramassage final
+## État du projet
 
-Critère franchi : **10 000 parties aléatoires, 1 034 220 coups**, invariant des 48 graines
-vérifié à chaque coup, aucune exception. Après ramassage final, les greniers totalisent
-toujours 48 graines.
+| Étape | État | Contenu |
+|---|---|---|
+| Moteur de jeu | Terminé | État du plateau, coups légaux, semis, captures et fin de partie |
+| Lecteur de parties | Terminé | Relecture coup par coup, repérage des semis et captures, contrôle des 48 graines |
+| Joueurs de référence | À construire | Joueur aléatoire dédié, puis minimax avec élagage alpha-bêta |
+| MCTS pur | À construire | Recherche UCT avec simulations aléatoires, sans réseau |
+| Oracle de finales | À construire | Analyse rétrograde, avec une cible de dix-huit graines à évaluer selon les ressources nécessaires |
+| Agent AlphaZero | À construire | Réseau politique/valeur, MCTS guidé et self-play |
+| Évaluation | À construire | Comparaison à l’oracle et aux joueurs de référence au fil de l’entraînement |
 
-Étapes suivantes.
+Le moteur permet déjà de générer une partie aléatoire pour le lecteur. Le module
+consacré aux joueurs de référence reste à développer.
 
-- [ ] Viewer HTML pour rejouer une partie coup par coup ← en cours
-- [ ] Joueurs de référence : aléatoire, puis minimax alpha-bêta
-- [ ] MCTS pur (UCT, simulations aléatoires)
-- [ ] Oracle des finales par analyse rétrograde, jusqu'à dix-huit graines
-- [ ] AlphaZero : réseau politique/valeur, MCTS guidé, self-play
-- [ ] Évaluation : taux d'optimalité en fonction des itérations d'entraînement
+La validation du moteur documentée à ce stade porte sur **10 000 parties
+aléatoires et 1 034 220 coups**, sans exception ni rupture de l’invariant des
+48 graines. Après le ramassage final, les scores totalisent toujours 48 graines.
+
+## Règles retenues
+
+Le moteur utilise la variante définie pour ce projet, avec **grand chelem
+autorisé** : un coup qui capture toutes les graines restantes du camp adverse
+effectue la capture et termine la partie.
+
+Les mécanismes principaux sont les suivants :
+
+- Douze trous, avec quatre graines par trou au départ.
+- Semis dans le sens antihoraire, en sautant le trou d’origine lors d’un tour complet.
+- Capture lorsque la dernière graine porte un trou adverse à deux ou trois graines,
+  puis capture en chaîne des trous précédents qui remplissent les mêmes conditions.
+- Obligation de nourrir l’adversaire lorsque son camp est vide, si un coup le permet.
+- Victoire à vingt-cinq graines capturées ; égalité à vingt-quatre partout.
+
+La compatibilité exacte des règles et des conditions de fin avec l’oracle devra
+être vérifiée lors de sa construction. Changer de variante nécessiterait de
+recalculer les données concernées et de refaire les évaluations.
 
 ## Validation
 
-Chaque étape a un critère chiffré, à franchir avant de passer à la suivante.
+Chaque étape doit être vérifiée avant de servir de base à la suivante. Les seuils
+ci-dessous sont des objectifs de validation ; seul celui du moteur est franchi
+à ce stade.
 
-| Étape | Critère |
+| Étape | Objectif |
 |---|---|
-| Moteur | 10 000 parties aléatoires sans exception, invariant des graines vérifié à chaque coup |
-| Minimax | profondeur 6 bat l'aléatoire dans plus de 95 % des parties |
-| MCTS pur | 1 000 simulations battent minimax profondeur 4 |
-| Oracle | cohérence par symétrie : une position et son miroir donnent des valeurs opposées |
-| AlphaZero | le taux d'optimalité contre l'oracle augmente au fil des itérations |
+| Moteur | Terminer 10 000 parties aléatoires sans exception et conserver les 48 graines à chaque coup |
+| Minimax | À profondeur 6, gagner plus de 95 % des parties contre le joueur aléatoire, selon un protocole à fixer |
+| MCTS pur | Avec 1 000 simulations par coup, dépasser minimax profondeur 4 sur une série de matchs |
+| Oracle | Vérifier les positions terminales et la cohérence des valeurs avec les transitions légales |
+| AlphaZero | Mesurer l’évolution du taux de coups optimaux sur un échantillon d’évaluation fixe |
 
-L'invariant des graines est le principal détecteur de bug du projet :
+L’invariant du moteur s’écrit :
 
 ```python
-somme(trous) + captures_joueur_0 + captures_joueur_1 == 48
+sum(etat["trous"]) + sum(etat["scores"]) == 48
 ```
 
-Toute graine perdue ou dupliquée le casse immédiatement.
+Il détecte toute perte ou duplication de graines. Il doit être complété par des
+vérifications des règles : conserver le bon total ne garantit pas, à lui seul,
+qu’un coup est correct.
 
-## Structure
+## Lancer le projet
 
-```
-src/
-    jeu.py            moteur : état, coups légaux, semis, capture, fin de partie
-    joueurs.py        aléatoire, minimax alpha-bêta, humain
-    mcts.py           recherche arborescente Monte-Carlo
-    reseau.py         réseau : tête politique (6) et tête valeur (1)
-    selfplay.py       génération de parties contre soi-même
-    entrainement.py   boucle d'apprentissage
-    finales.py        analyse rétrograde, construction de l'oracle
-    evaluation.py     matchs, ELO interne, taux d'optimalité
-tests/
-donnees/              sorties générées, non versionnées
-```
-
-Le moteur et l'oracle sont en Python pur, testables sans GPU.
-
-## Lancer
+Depuis la racine du projet, avec Python 3.13 ou plus :
 
 ```bash
 python3 src/jeu.py
 ```
 
-Python 3.13 ou plus, numpy, PyTorch (backend MPS sur Apple Silicon), pytest.
+Le script exécute des vérifications et génère une partie aléatoire dans
+`donnees/partie.json`.
+
+Pour la rejouer dans le navigateur, lancer ensuite un serveur local :
+
+```bash
+python3 -m http.server 8000
+```
+
+Ouvrir [le lecteur de parties](http://localhost:8000/viewer.html).
+Il permet de parcourir la partie, de lancer la lecture automatique et de suivre
+les semis, les captures et le total des graines.
+
+Le moteur et le lecteur actuels ne nécessitent pas PyTorch. La pile prévue pour
+les étapes d’apprentissage comprend NumPy, PyTorch avec le backend MPS sur Apple
+Silicon, et pytest pour les tests.
+
+## Organisation
+
+Les fichiers présents pour les premières étapes :
+
+```text
+src/
+    jeu.py            moteur, vérifications et export d’une partie aléatoire
+    joueurs.py        module à développer
+viewer.html           lecteur de parties
+donnees/              données générées
+tests/                répertoire prévu pour les tests
+```
+
+Les modules prévus pour la suite :
+
+```text
+src/
+    mcts.py            recherche arborescente Monte-Carlo
+    reseau.py          réseau avec sorties politique et valeur
+    selfplay.py        génération des parties d’entraînement
+    entrainement.py    boucle d’apprentissage
+    finales.py        construction de l’oracle par analyse rétrograde
+    evaluation.py     matchs et mesure du taux de coups optimaux
+```
 
 ## Références
 
-L'algorithme, publié par DeepMind. David Silver dirige les projets AlphaGo et
-AlphaZero ; *et al.* signifie « et les autres auteurs ».
+*The Thinking Game* a été le point de départ personnel du projet. Les publications
+suivantes constituent ses références techniques :
 
-- Silver et al., *[Mastering the game of Go without human
-  knowledge](https://www.nature.com/articles/nature24270)*, Nature 550, 354–359,
-  2017. AlphaGo Zero, premier agent entraîné sans aucune partie humaine.
-  Lecture libre : [présentation
-  DeepMind](https://deepmind.google/blog/alphago-zero-starting-from-scratch/).
-- Silver et al., *[A general reinforcement learning algorithm that masters chess,
-  shogi and Go through self-play](https://www.science.org/doi/10.1126/science.aar6404)*,
-  Science 362, 1140–1144, 2018. AlphaZero, le même algorithme généralisé à trois
-  jeux — c'est celui reproduit ici. L'article complet est accessible avec un compte
-  Science gratuit. Sans compte : [présentation
-  DeepMind](https://deepmind.google/blog/alphazero-shedding-new-light-on-chess-shogi-and-go/)
-  ou le [preprint
-  PDF](https://storage.googleapis.com/deepmind-media/DeepMind.com/Blog/alphazero-shedding-new-light-on-chess-shogi-and-go/alphazero_preprint.pdf).
-
-Le jeu, par d'autres équipes.
-
-- Romein et Bal, *Awari is Solved*, ICGA Journal 25(3), Vrije Universiteit
-  Amsterdam, 2002. La résolution complète du jeu, sur un cluster de 144 processeurs.
-  Les bases de données publiées à l'époque sont aujourd'hui hors ligne, d'où
-  l'oracle reconstruit à l'étape 4.
-  [Notice](https://www.semanticscholar.org/paper/Awari-is-Solved-Romein-Bal/9651f4a7fd03be889d1e8a47407471ca38d68381) ·
-  [Synthèse et historique](https://www.chessprogramming.org/Awari)
-- [Oware, Wikipedia](https://en.wikipedia.org/wiki/Oware) — les règles, variation
-  *abapa*.
+- Silver et al., *Mastering the game of Go without human knowledge*,
+  **Nature**, 2017. Travaux sur AlphaGo Zero.
+  [Article](https://www.nature.com/articles/nature24270) ·
+  [Présentation par DeepMind](https://deepmind.google/blog/alphago-zero-starting-from-scratch/).
+- Silver et al., *A general reinforcement learning algorithm that masters chess,
+  shogi, and Go through self-play*, **Science**, 2018. Référence pour AlphaZero.
+  [Article](https://www.science.org/doi/10.1126/science.aar6404) ·
+  [Présentation par DeepMind](https://deepmind.google/blog/alphazero-shedding-new-light-on-chess-shogi-and-go/) ·
+  [Prépublication PDF](https://storage.googleapis.com/deepmind-media/DeepMind.com/Blog/alphazero-shedding-new-light-on-chess-shogi-and-go/alphazero_preprint.pdf).
+- Romein et Bal, *Awari is Solved*, **ICGA Journal**, 2002.
+  Référence pour les travaux sur la résolution du jeu.
+  [Notice](https://www.semanticscholar.org/paper/Awari-is-Solved/9651f4a7fd03be889d1e8a47407471ca38d68381).

@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlphaAwalé — viewer</title>
+<style>
+  :root {
+    --ground:  #EDEBE4;
+    --surface: #F7F6F1;
+    --rail:    #E2DFD4;
+    --ink:     #1C1E20;
+    --ink-2:   #5C5D58;
+    --rule:    #D2CEC0;
+    --j0:      #2E4A7D;
+    --j0-soft: #DCE3EF;
+    --j1:      #3F6A5F;
+    --j1-soft: #DBE6E1;
+    --or:      #8E6410;
+    --or-soft: #F0E4C4;
+    --rouge:   #93342A;
+
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Charter", Palatino, Georgia, serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #15171A; --surface: #1E2125; --rail: #2C3036;
+      --ink: #E7E5DE; --ink-2: #9B9A93; --rule: #33373C;
+      --j0: #82A6DE; --j0-soft: #23303F;
+      --j1: #77AC9C; --j1-soft: #1F302C;
+      --or: #D5A93E; --or-soft: #33290F; --rouge: #DC7361;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 2rem 1.25rem 4rem;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 60rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.75rem; }
+
+  header { display: flex; flex-direction: column; gap: 0.4rem; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-2);
+  }
+  h1 { margin: 0; font-size: clamp(1.6rem, 5vw, 2.25rem); letter-spacing: -0.015em; }
+
+  /* ---------- plateau ---------- */
+
+  .plateau-wrap { overflow-x: auto; padding-bottom: 0.5rem; }
+
+  .plateau {
+    display: inline-grid;
+    grid-template-columns: auto repeat(6, minmax(3.6rem, 4.6rem)) auto;
+    gap: 0.45rem;
+    align-items: center;
+    padding: 1.1rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    min-width: 100%;
+  }
+
+  .camp {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-2); white-space: nowrap;
+    display: flex; flex-direction: column; gap: 0.15rem;
+  }
+  .camp.j1 { color: var(--j1); }
+  .camp.j0 { color: var(--j0); }
+  .camp .trait { font-size: 0.62rem; color: var(--or); }
+
+  .grenier {
+    display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+    padding: 0.5rem 0.7rem; border-left: 1px solid var(--rule); min-width: 4.5rem;
+  }
+  .grenier .n {
+    font-family: var(--mono); font-size: 1.6rem; font-weight: 700;
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .grenier .lbl {
+    font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-2);
+  }
+  .grenier.j0 .n { color: var(--j0); }
+  .grenier.j1 .n { color: var(--j1); }
+
+  .trou {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--rail);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.1rem;
+    transition: background 160ms ease, box-shadow 160ms ease;
+  }
+  .trou .v {
+    font-family: var(--mono); font-size: 1.35rem; font-weight: 600;
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .trou .n {
+    font-family: var(--mono); font-size: 0.6rem; color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .trou.vide .v { opacity: 0.3; }
+
+  .trou.source { background: var(--j0-soft); box-shadow: inset 0 0 0 2px var(--j0); }
+  .trou.seme   { background: var(--j1-soft); box-shadow: inset 0 0 0 2px var(--j1); }
+  .trou.pris   { background: var(--or-soft); box-shadow: inset 0 0 0 2px var(--or); }
+  .trou.pris .v { color: var(--or); }
+
+  .delta {
+    position: absolute; top: -0.35rem; right: -0.2rem;
+    font-family: var(--mono); font-size: 0.65rem; font-weight: 700;
+    padding: 0.05rem 0.3rem; border-radius: 2px;
+    background: var(--j1); color: var(--surface);
+  }
+  .delta.moins { background: var(--or); }
+
+  /* ---------- commandes ---------- */
+
+  .controls { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+
+  button {
+    font-family: var(--mono); font-size: 0.82rem;
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 3px;
+    padding: 0.45rem 0.8rem; cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: var(--rail); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--j0); outline-offset: 2px; }
+
+  input[type=range] { flex: 1 1 14rem; min-width: 10rem; accent-color: var(--j0); }
+
+  .compteur {
+    font-family: var(--mono); font-size: 0.82rem; color: var(--ink-2);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+
+  /* ---------- infos ---------- */
+
+  .infos {
+    display: grid; gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  }
+  .carte {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 4px;
+    padding: 0.75rem 0.9rem; display: flex; flex-direction: column; gap: 0.2rem;
+  }
+  .carte .lbl {
+    font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-2);
+  }
+  .carte .val { font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .carte .val.j0 { color: var(--j0); }
+  .carte .val.j1 { color: var(--j1); }
+  .carte .val.or { color: var(--or); }
+  .carte .val.ko { color: var(--rouge); }
+
+  .legende {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem;
+    font-family: var(--mono); font-size: 0.68rem; color: var(--ink-2);
+  }
+  .legende span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .pastille { width: 0.75rem; height: 0.75rem; border-radius: 50%; display: inline-block; }
+  .p-source { background: var(--j0-soft); box-shadow: inset 0 0 0 2px var(--j0); }
+  .p-seme   { background: var(--j1-soft); box-shadow: inset 0 0 0 2px var(--j1); }
+  .p-pris   { background: var(--or-soft); box-shadow: inset 0 0 0 2px var(--or); }
+
+  .erreur {
+    background: var(--surface); border-left: 3px solid var(--rouge);
+    padding: 1rem 1.2rem; font-size: 0.9rem;
+  }
+  .erreur code { font-family: var(--mono); font-size: 0.85em; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <header>
+    <div class="eyebrow">AlphaAwalé · étape 1bis</div>
+    <h1>Rejouer une partie</h1>
+  </header>
+
+  <div id="zone-erreur"></div>
+
+  <div class="plateau-wrap">
+    <div class="plateau" id="plateau"></div>
+  </div>
+
+  <div class="controls">
+    <button id="debut" type="button">⏮</button>
+    <button id="prec"  type="button">◀ précédent</button>
+    <button id="suiv"  type="button">suivant ▶</button>
+    <button id="fin"   type="button">⏭</button>
+    <button id="play"  type="button">▶ lecture</button>
+    <input type="range" id="curseur" min="0" value="0">
+    <span class="compteur" id="compteur">—</span>
+  </div>
+
+  <div class="infos">
+    <div class="carte">
+      <span class="lbl">au trait</span>
+      <span class="val" id="i-trait">—</span>
+    </div>
+    <div class="carte">
+      <span class="lbl">coup joué</span>
+      <span class="val" id="i-coup">—</span>
+    </div>
+    <div class="carte">
+      <span class="lbl">capture</span>
+      <span class="val" id="i-capture">—</span>
+    </div>
+    <div class="carte">
+      <span class="lbl">invariant</span>
+      <span class="val" id="i-invariant">—</span>
+    </div>
+  </div>
+
+  <p class="legende">
+    <span><i class="pastille p-source"></i> trou joué, vidé</span>
+    <span><i class="pastille p-seme"></i> a reçu une graine</span>
+    <span><i class="pastille p-pris"></i> capturé</span>
+  </p>
+
+</div>
+
+<script>
+"use strict";
+
+const HAUT = [11, 10, 9, 8, 7, 6];
+const BAS  = [0, 1, 2, 3, 4, 5];
+
+let positions = [];
+let index = 0;
+let minuteur = null;
+
+const $ = (id) => document.getElementById(id);
+
+// ---------- comparer deux positions pour retrouver ce qui s'est passé ----------
+
+function analyser(avant, apres) {
+  if (!avant) return { source: -1, semes: [], pris: [], gagnees: 0, delta: {} };
+
+  const source = [];
+  const semes  = [];
+  const pris   = [];
+  const delta  = {};
+
+  for (let n = 0; n < 12; n++) {
+    const d = apres.trous[n] - avant.trous[n];
+    if (d !== 0) delta[n] = d;
+    if (d > 0) semes.push(n);
+  }
+
+  // le trou de depart : appartient au joueur qui vient de jouer, et il est retombe a 0
+  const joueur = avant.trait;
+  for (let n = joueur * 6; n < joueur * 6 + 6; n++) {
+    if (avant.trous[n] > 0 && apres.trous[n] === 0) source.push(n);
+  }
+
+  // les trous captures : chez l'adversaire, vides apres coup, et non joues
+  const gagnees = apres.scores[joueur] - avant.scores[joueur];
+  if (gagnees > 0) {
+    for (let n = 0; n < 12; n++) {
+      if (Math.floor(n / 6) !== joueur && apres.trous[n] === 0 && avant.trous[n] > 0) {
+        if (!source.includes(n)) pris.push(n);
+      }
+    }
+  }
+
+  return { source: source.length ? source[0] : -1, semes, pris, gagnees, delta };
+}
+
+// ---------- dessin ----------
+
+function cellule(n, position, info) {
+  const d = document.createElement("div");
+  d.className = "trou";
+  const v = position.trous[n];
+  if (v === 0) d.classList.add("vide");
+  if (info.pris.includes(n))        d.classList.add("pris");
+  else if (n === info.source)       d.classList.add("source");
+  else if (info.semes.includes(n))  d.classList.add("seme");
+
+  const val = document.createElement("span");
+  val.className = "v";
+  val.textContent = v;
+
+  const num = document.createElement("span");
+  num.className = "n";
+  num.textContent = n;
+
+  d.append(val, num);
+
+  if (info.delta[n]) {
+    const b = document.createElement("span");
+    b.className = "delta" + (info.delta[n] < 0 ? " moins" : "");
+    b.textContent = (info.delta[n] > 0 ? "+" : "") + info.delta[n];
+    d.append(b);
+  }
+  return d;
+}
+
+function etiquetteCamp(joueur, position) {
+  const d = document.createElement("div");
+  d.className = "camp j" + joueur;
+  const nom = document.createElement("span");
+  nom.textContent = "joueur " + joueur;
+  d.append(nom);
+  if (position.trait === joueur) {
+    const t = document.createElement("span");
+    t.className = "trait";
+    t.textContent = "au trait";
+    d.append(t);
+  }
+  return d;
+}
+
+function grenier(joueur, position) {
+  const d = document.createElement("div");
+  d.className = "grenier j" + joueur;
+  const n = document.createElement("span");
+  n.className = "n";
+  n.textContent = position.scores[joueur];
+  const l = document.createElement("span");
+  l.className = "lbl";
+  l.textContent = "J" + joueur;
+  d.append(n, l);
+  return d;
+}
+
+function dessiner() {
+  const position = positions[index];
+  const info = analyser(positions[index - 1], position);
+  const plateau = $("plateau");
+  plateau.replaceChildren();
+
+  plateau.append(etiquetteCamp(1, position));
+  HAUT.forEach(n => plateau.append(cellule(n, position, info)));
+  plateau.append(grenier(1, position));
+
+  plateau.append(etiquetteCamp(0, position));
+  BAS.forEach(n => plateau.append(cellule(n, position, info)));
+  plateau.append(grenier(0, position));
+
+  // panneau d'infos
+  const fini = index === positions.length - 1;
+  $("i-trait").textContent = fini ? "partie terminée" : "joueur " + position.trait;
+  $("i-trait").className = "val " + (fini ? "" : "j" + position.trait);
+
+  $("i-coup").textContent = info.source >= 0 ? "trou " + info.source : "—";
+
+  $("i-capture").textContent = info.gagnees > 0 ? info.gagnees + " graines" : "—";
+  $("i-capture").className = "val " + (info.gagnees > 0 ? "or" : "");
+
+  const total = position.trous.reduce((a, b) => a + b, 0)
+              + position.scores[0] + position.scores[1];
+  $("i-invariant").textContent = total + " / 48";
+  $("i-invariant").className = "val " + (total === 48 ? "" : "ko");
+
+  $("compteur").textContent = "position " + index + " / " + (positions.length - 1);
+  $("curseur").value = index;
+
+  $("debut").disabled = index === 0;
+  $("prec").disabled  = index === 0;
+  $("suiv").disabled  = index === positions.length - 1;
+  $("fin").disabled   = index === positions.length - 1;
+}
+
+// ---------- navigation ----------
+
+function aller(i) {
+  index = Math.max(0, Math.min(positions.length - 1, i));
+  dessiner();
+}
+
+function stopper() {
+  if (minuteur) { clearInterval(minuteur); minuteur = null; $("play").textContent = "▶ lecture"; }
+}
+
+$("debut").addEventListener("click", () => { stopper(); aller(0); });
+$("prec").addEventListener("click",  () => { stopper(); aller(index - 1); });
+$("suiv").addEventListener("click",  () => { stopper(); aller(index + 1); });
+$("fin").addEventListener("click",   () => { stopper(); aller(positions.length - 1); });
+$("curseur").addEventListener("input", (e) => { stopper(); aller(Number(e.target.value)); });
+
+$("play").addEventListener("click", () => {
+  if (minuteur) { stopper(); return; }
+  if (index === positions.length - 1) aller(0);
+  $("play").textContent = "⏸ pause";
+  minuteur = setInterval(() => {
+    if (index >= positions.length - 1) { stopper(); return; }
+    aller(index + 1);
+  }, 420);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft")  { stopper(); aller(index - 1); }
+  if (e.key === "ArrowRight") { stopper(); aller(index + 1); }
+  if (e.key === " ")          { e.preventDefault(); $("play").click(); }
+});
+
+// ---------- chargement ----------
+
+fetch("donnees/partie.json")
+  .then(r => {
+    if (!r.ok) throw new Error("fichier introuvable (" + r.status + ")");
+    return r.json();
+  })
+  .then(data => {
+    positions = data;
+    $("curseur").max = positions.length - 1;
+    aller(0);
+  })
+  .catch(err => {
+    $("zone-erreur").innerHTML =
+      '<div class="erreur"><strong>Impossible de charger la partie.</strong><br>' +
+      err.message +
+      '<br><br>Lance un serveur depuis le dossier <code>awale</code> :<br>' +
+      '<code>python3 -m http.server 8000</code><br>' +
+      'puis ouvre <code>http://localhost:8000/viewer.html</code></div>';
+  });
+</script>
+</body>
+</html>

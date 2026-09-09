@@ -1,0 +1,28 @@
+# Configuration Ruff — AlphaAwalé
+# Doc : https://docs.astral.sh/ruff/
+#
+# Choix : un linter qui parle RAREMENT mais UTILEMENT.
+# On ne garde que les règles qui signalent de vrais problèmes, pas du style.
+# On en rajoutera quand le projet grandira.
+
+line-length = 100
+target-version = "py313"
+
+[lint]
+select = [
+    "F",  # pyflakes — variables mortes, noms inconnus, imports inutiles.
+          # C'est ICI que vivent les vrais bugs. Les trois plus longs du projet
+          # (rangee_du_haut, apres_capture, case_j1) étaient tous des F.
+    "B",  # bugbear — pièges courants du langage
+    "E9", # erreurs de syntaxe et d'indentation
+]
+
+ignore = [
+    # Le projet vit sur un disque exFAT : macOS marque TOUS les fichiers
+    # exécutables, ce qui déclencherait cette règle à tort partout.
+    "EXE002",
+]
+
+[format]
+quote-style = "double"
+indent-style = "space"
