@@ -19,36 +19,7 @@ base de positions dont le résultat optimal est calculé.
 **Le projet est en cours de développement.** Le moteur de jeu et le lecteur de
 parties sont terminés. La recherche arborescente, l’oracle et l’apprentissage
 constituent les prochaines étapes. Il s’agit d’un projet personnel
-d’apprentissage, sans affiliation avec DeepMind.
-
-## Pourquoi l’Awalé
-
-L’Awalé offre un terrain d’expérimentation compact : deux rangées de six trous,
-quarante-huit graines et au maximum six coups à examiner à chaque tour. Le jeu
-est déterministe et les deux joueurs disposent de toute l’information sur le
-plateau.
-
-Cette simplicité du matériel laisse place à des décisions intéressantes :
-préparer une capture, anticiper le semis suivant ou nourrir l’adversaire quand
-son camp est vide. Elle permet aussi de commencer par un moteur que l’on peut
-inspecter et tester sans GPU.
-
-Les travaux de Romein et Bal sur la résolution de l’Awari constituent une autre
-motivation. Le projet prévoit de construire son propre oracle sur un ensemble
-limité de finales, afin de disposer d’une référence exacte pour l’évaluation.
-
-## Ce que je veux mesurer
-
-Les matchs contre des joueurs de référence permettront de suivre les progrès de
-l’agent. L’oracle apportera une mesure complémentaire : **la proportion de
-positions de finale dans lesquelles l’agent choisit un coup optimal**.
-
-L’évaluation portera sur un échantillon de positions de l’oracle, avec un nombre
-de positions et un protocole documentés. Si plusieurs coups sont optimaux dans
-une position, chacun devra être accepté.
-
-Cette mesure restera limitée aux finales couvertes par l’oracle. Elle ne suffira
-pas, à elle seule, à décrire le niveau de l’agent sur une partie entière.
+d’apprentissage.
 
 ## Comment l’agent apprendra
 
@@ -72,31 +43,17 @@ ces travaux.
 
 ## État du projet
 
-| Étape | État | Contenu |
+| Étape | État |
 |---|---|---|
-| Moteur de jeu | Terminé | État du plateau, coups légaux, semis, captures et fin de partie |
-| Lecteur de parties | Terminé | Relecture coup par coup, repérage des semis et captures, contrôle des 48 graines |
-| Joueurs de référence | À construire | Joueur aléatoire dédié, puis minimax avec élagage alpha-bêta |
-| MCTS pur | À construire | Recherche UCT avec simulations aléatoires, sans réseau |
-| Oracle de finales | À construire | Analyse rétrograde, avec une cible de dix-huit graines à évaluer selon les ressources nécessaires |
-| Agent AlphaZero | À construire | Réseau politique/valeur, MCTS guidé et self-play |
-| Évaluation | À construire | Comparaison à l’oracle et aux joueurs de référence au fil de l’entraînement |
-
-Le moteur permet déjà de générer une partie aléatoire pour le lecteur. Le module
-consacré aux joueurs de référence reste à développer.
-
-La validation du moteur documentée à ce stade porte sur **10 000 parties
-aléatoires et 1 034 220 coups**, sans exception ni rupture de l’invariant des
-48 graines. Après le ramassage final, les scores totalisent toujours 48 graines.
+| Moteur de jeu | Terminé |
+| Lecteur de parties | Terminé |
+| Joueurs de référence | À construire |
+| MCTS pur | À construire |
+| Oracle de finales | À construire |
+| Agent AlphaZero | À construire |
+| Évaluation | À construire |
 
 ## Règles retenues
-
-Le moteur utilise la variante définie pour ce projet, avec **grand chelem
-autorisé** : un coup qui capture toutes les graines restantes du camp adverse
-effectue la capture et termine la partie.
-
-Les mécanismes principaux sont les suivants :
-
 - Douze trous, avec quatre graines par trou au départ.
 - Semis dans le sens antihoraire, en sautant le trou d’origine lors d’un tour complet.
 - Capture lorsque la dernière graine porte un trou adverse à deux ou trois graines,
@@ -104,15 +61,11 @@ Les mécanismes principaux sont les suivants :
 - Obligation de nourrir l’adversaire lorsque son camp est vide, si un coup le permet.
 - Victoire à vingt-cinq graines capturées ; égalité à vingt-quatre partout.
 
-La compatibilité exacte des règles et des conditions de fin avec l’oracle devra
-être vérifiée lors de sa construction. Changer de variante nécessiterait de
-recalculer les données concernées et de refaire les évaluations.
 
 ## Validation
 
 Chaque étape doit être vérifiée avant de servir de base à la suivante. Les seuils
-ci-dessous sont des objectifs de validation ; seul celui du moteur est franchi
-à ce stade.
+ci-dessous sont des objectifs de validation
 
 | Étape | Objectif |
 |---|---|
@@ -121,16 +74,6 @@ ci-dessous sont des objectifs de validation ; seul celui du moteur est franchi
 | MCTS pur | Avec 1 000 simulations par coup, dépasser minimax profondeur 4 sur une série de matchs |
 | Oracle | Vérifier les positions terminales et la cohérence des valeurs avec les transitions légales |
 | AlphaZero | Mesurer l’évolution du taux de coups optimaux sur un échantillon d’évaluation fixe |
-
-L’invariant du moteur s’écrit :
-
-```python
-sum(etat["trous"]) + sum(etat["scores"]) == 48
-```
-
-Il détecte toute perte ou duplication de graines. Il doit être complété par des
-vérifications des règles : conserver le bon total ne garantit pas, à lui seul,
-qu’un coup est correct.
 
 ## Lancer le projet
 
