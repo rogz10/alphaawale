@@ -44,7 +44,7 @@ ces travaux.
 ## État du projet
 
 | Étape | État |
-|---|---|---|
+|---|---|
 | Moteur de jeu | Terminé |
 | Lecteur de parties | Terminé |
 | Joueurs de référence | À construire |
